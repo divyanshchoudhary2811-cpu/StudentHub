@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>StudentHub - Admin Login</title>
+
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #667eea,
+                    #764ba2
+                );
+
+            padding: 20px;
+
+        }
+
+
+        .login-container {
+
+            width: 100%;
+
+            max-width: 420px;
+
+        }
+
+
+        .login-card {
+
+            background: white;
+
+            padding: 40px;
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 20px 50px
+                rgba(0, 0, 0, 0.20);
+
+        }
+
+
+        .logo {
+
+            width: 70px;
+
+            height: 70px;
+
+            margin: 0 auto 20px;
+
+            border-radius: 18px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #667eea,
+                    #764ba2
+                );
+
+            color: white;
+
+            font-size: 32px;
+
+            font-weight: bold;
+
+        }
+
+
+        h1 {
+
+            text-align: center;
+
+            color: #222;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .subtitle {
+
+            text-align: center;
+
+            color: #777;
+
+            margin-bottom: 30px;
+
+            font-size: 14px;
+
+        }
+
+
+        .form-group {
+
+            margin-bottom: 20px;
+
+        }
+
+
+        label {
+
+            display: block;
+
+            margin-bottom: 8px;
+
+            font-weight: 600;
+
+            color: #333;
+
+        }
+
+
+        input {
+
+            width: 100%;
+
+            padding: 13px 14px;
+
+            border: 1px solid #ddd;
+
+            border-radius: 10px;
+
+            font-size: 15px;
+
+            outline: none;
+
+            transition: 0.3s;
+
+        }
+
+
+        input:focus {
+
+            border-color: #667eea;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(102, 126, 234, 0.12);
+
+        }
+
+
+        .password-wrapper {
+
+            position: relative;
+
+        }
+
+
+        .password-wrapper input {
+
+            padding-right: 50px;
+
+        }
+
+
+        #togglePassword {
+
+            position: absolute;
+
+            right: 12px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            border: none;
+
+            background: transparent;
+
+            cursor: pointer;
+
+            font-size: 18px;
+
+        }
+
+
+        .message {
+
+            display: none;
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            margin-bottom: 18px;
+
+            font-size: 14px;
+
+        }
+
+
+        #errorMessage {
+
+            background: #ffe5e5;
+
+            color: #c62828;
+
+            border: 1px solid #ffcaca;
+
+        }
+
+
+        #successMessage {
+
+            background: #e5f8ec;
+
+            color: #218838;
+
+            border: 1px solid #bce8ca;
+
+        }
+
+
+        #loginBtn {
+
+            width: 100%;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #667eea,
+                    #764ba2
+                );
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: 0.3s;
+
+        }
+
+
+        #loginBtn:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 8px 20px
+                rgba(102, 126, 234, 0.30);
+
+        }
+
+
+        #loginBtn:disabled {
+
+            opacity: 0.7;
+
+            cursor: not-allowed;
+
+            transform: none;
+
+        }
+
+
+        .footer {
+
+            text-align: center;
+
+            margin-top: 25px;
+
+            color: #999;
+
+            font-size: 12px;
+
+        }
+
+
+        @media (max-width: 480px) {
+
+            .login-card {
+
+                padding: 30px 22px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="login-container">
+
+
+        <div class="login-card">
+
+
+            <!-- LOGO -->
+
+            <div class="logo">
+                S
+            </div>
+
+
+            <!-- TITLE -->
+
+            <h1>
+                StudentHub
+            </h1>
+
+
+            <p class="subtitle">
+                Student Management System
+            </p>
+
+
+            <!-- ERROR MESSAGE -->
+
+            <div
+                id="errorMessage"
+                class="message"
+            ></div>
+
+
+            <!-- SUCCESS MESSAGE -->
+
+            <div
+                id="successMessage"
+                class="message"
+            ></div>
+
+
+            <!-- LOGIN FORM -->
+
+            <form id="loginForm">
+
+
+                <!-- USERNAME -->
+
+                <div class="form-group">
+
+                    <label for="username">
+                        Username
+                    </label>
+
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Enter username"
+                        autocomplete="username"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- PASSWORD -->
+
+                <div class="form-group">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+
+                    <div class="password-wrapper">
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Enter password"
+                            autocomplete="current-password"
+                            required
+                        >
+
+
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            title="Show password"
+                        >
+                            👁️
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- LOGIN BUTTON -->
+
+                <button
+                    type="submit"
+                    id="loginBtn"
+                >
+                    Login
+                </button>
+
+
+            </form>
+
+
+            <!-- FOOTER -->
+
+            <div class="footer">
+
+                StudentHub © 2026
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+
+        // ==========================================
+        // STUDENT HUB - LOGIN SYSTEM
+        // ==========================================
+
+
+        const LOGIN_API =
+            "http://127.0.0.1:5000/api/auth/login";
+
+
+        // ==========================================
+        // GET HTML ELEMENTS
+        // ==========================================
+
+
+        const loginForm =
+            document.getElementById("loginForm");
+
+
+        const usernameInput =
+            document.getElementById("username");
+
+
+        const passwordInput =
+            document.getElementById("password");
+
+
+        const loginBtn =
+            document.getElementById("loginBtn");
+
+
+        const togglePassword =
+            document.getElementById("togglePassword");
+
+
+        const errorMessage =
+            document.getElementById("errorMessage");
+
+
+        const successMessage =
+            document.getElementById("successMessage");
+
+
+        // ==========================================
+        // SHOW / HIDE PASSWORD
+        // ==========================================
+
+
+        togglePassword.addEventListener(
+            "click",
+            function () {
+
+
+                if (
+                    passwordInput.type ===
+                    "password"
+                ) {
+
+                    passwordInput.type =
+                        "text";
+
+                    togglePassword.textContent =
+                        "🙈";
+
+                    togglePassword.title =
+                        "Hide password";
+
+                }
+
+                else {
+
+                    passwordInput.type =
+                        "password";
+
+                    togglePassword.textContent =
+                        "👁️";
+
+                    togglePassword.title =
+                        "Show password";
+
+                }
+
+            }
+        );
+
+
+        // ==========================================
+        // LOGIN FORM
+        // ==========================================
+
+
+        loginForm.addEventListener(
+            "submit",
+            async function (event) {
+
+
+                // Prevent page refresh
+
+                event.preventDefault();
+
+
+                // Hide previous messages
+
+                hideMessages();
+
+
+                // Get username
+
+                const username =
+                    usernameInput.value.trim();
+
+
+                // Get password
+
+                const password =
+                    passwordInput.value;
+
+
+                // ==================================
+                // VALIDATION
+                // ==================================
+
+
+                if (
+                    !username ||
+                    !password
+                ) {
+
+                    showError(
+                        "Please enter username and password."
+                    );
+
+                    return;
+
+                }
+
+
+                // ==================================
+                // BUTTON LOADING
+                // ==================================
+
+
+                loginBtn.disabled =
+                    true;
+
+                loginBtn.textContent =
+                    "Logging in...";
+
+
+                try {
+
+
+                    console.log(
+                        "================================"
+                    );
+
+                    console.log(
+                        "LOGIN STARTED"
+                    );
+
+                    console.log(
+                        "================================"
+                    );
+
+
+                    console.log(
+                        "Login API:"
+                    );
+
+                    console.log(
+                        LOGIN_API
+                    );
+
+
+                    // ==================================
+                    // SEND LOGIN REQUEST
+                    // ==================================
+
+
+                    const response =
+                        await fetch(
+                            LOGIN_API,
+                            {
+
+                                method:
+                                    "POST",
+
+                                headers:
+                                    {
+                                        "Content-Type":
+                                            "application/json"
+                                    },
+
+                                body:
+                                    JSON.stringify(
+                                        {
+
+                                            username:
+                                                username,
+
+                                            password:
+                                                password
+
+                                        }
+                                    )
+
+                            }
+                        );
+
+
+                    // ==================================
+                    // RESPONSE STATUS
+                    // ==================================
+
+
+                    console.log(
+                        "Response status:",
+                        response.status
+                    );
+
+
+                    console.log(
+                        "Response content type:",
+                        response.headers.get(
+                            "content-type"
+                        )
+                    );
+
+
+                    // ==================================
+                    // READ RESPONSE AS TEXT
+                    // ==================================
+
+                    const responseText =
+                        await response.text();
+
+
+                    console.log(
+                        "SERVER RESPONSE:"
+                    );
+
+                    console.log(
+                        responseText
+                    );
+
+
+                    // ==================================
+                    // CONVERT RESPONSE TO JSON
+                    // ==================================
+
+                    let data;
+
+
+                    try {
+
+                        data =
+                            JSON.parse(
+                                responseText
+                            );
+
+                    }
+
+                    catch (jsonError) {
+
+                        console.error(
+                            "Response is not JSON."
+                        );
+
+
+                        throw new Error(
+                            "The server returned HTML instead of a JSON login response."
+                        );
+
+                    }
+
+
+                    // ==================================
+                    // CHECK HTTP STATUS
+                    // ==================================
+
+
+                    if (
+                        !response.ok
+                    ) {
+
+                        throw new Error(
+                            data.message ||
+                            "Invalid username or password."
+                        );
+
+                    }
+
+
+                    // ==================================
+                    // CHECK TOKEN
+                    // ==================================
+
+
+                    if (
+                        !data.token
+                    ) {
+
+                        throw new Error(
+                            "Login succeeded, but no token was received."
+                        );
+
+                    }
+
+
+                    // ==================================
+                    // SAVE LOGIN INFORMATION
+                    // ==================================
+
+
+                    sessionStorage.setItem(
+                        "studenthubLoggedIn",
+                        "true"
+                    );
+
+
+                    sessionStorage.setItem(
+                        "studenthubToken",
+                        data.token
+                    );
+
+
+                    sessionStorage.setItem(
+                        "studenthubUsername",
+                        data.username ||
+                        username
+                    );
+
+
+                    console.log(
+                        "Login successful."
+                    );
+
+
+                    console.log(
+                        "Token saved."
+                    );
+
+
+                    // ==================================
+                    // SUCCESS MESSAGE
+                    // ==================================
+
+
+                    showSuccess(
+                        "Login successful! Opening StudentHub..."
+                    );
+
+
+                    loginBtn.textContent =
+                        "Success";
+
+
+                    // ==================================
+                    // REDIRECT
+                    // ==================================
+
+
+                    console.log(
+                        "Redirecting to index.html..."
+                    );
+
+
+                    setTimeout(
+                        function () {
+
+
+                            window.location.replace(
+                                "./index.html"
+                            );
+
+
+                        },
+                        700
+                    );
+
+
+                }
+
+
+                catch (error) {
+
+
+                    console.error(
+                        "================================"
+                    );
+
+
+                    console.error(
+                        "LOGIN ERROR"
+                    );
+
+
+                    console.error(
+                        error
+                    );
+
+
+                    console.error(
+                        "================================"
+                    );
+
+
+                    // ==================================
+                    // SHOW ERROR
+                    // ==================================
+
+
+                    showError(
+                        error.message ||
+                        "Login failed."
+                    );
+
+
+                    // ==================================
+                    // RESET BUTTON
+                    // ==================================
+
+
+                    loginBtn.disabled =
+                        false;
+
+
+                    loginBtn.textContent =
+                        "Login";
+
+                }
+
+            }
+        );
+
+
+        // ==========================================
+        // SHOW ERROR
+        // ==========================================
+
+
+        function showError(message) {
+
+            errorMessage.textContent =
+                message;
+
+            errorMessage.style.display =
+                "block";
+
+        }
+
+
+        // ==========================================
+        // SHOW SUCCESS
+        // ==========================================
+
+
+        function showSuccess(message) {
+
+            successMessage.textContent =
+                message;
+
+            successMessage.style.display =
+                "block";
+
+        }
+
+
+        // ==========================================
+        // HIDE MESSAGES
+        // ==========================================
+
+
+        function hideMessages() {
+
+            errorMessage.style.display =
+                "none";
+
+            successMessage.style.display =
+                "none";
+
+        }
+
+
+    </script>
+
+
+</body>
+
+</html>

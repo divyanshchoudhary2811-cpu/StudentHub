@@ -2,189 +2,1350 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>StudentHub - Student Management System</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="stylesheet" href="style.css">
+    <title>
+        StudentHub - Student Management System
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
 </head>
+
 
 <body>
 
-    <!-- Sidebar -->
+
+    <!-- ==========================================
+         SIDEBAR
+    =========================================== -->
+
     <aside class="sidebar">
 
-        <h2>🎓 StudentHub</h2>
+        <div class="logo">
+
+            <h2>
+                🎓 StudentHub
+            </h2>
+
+            <p>
+                Student Management
+            </p>
+
+        </div>
+
 
         <nav>
-            <a href="#" class="active">🏠 Dashboard</a>
-            <a href="#">👨‍🎓 Students</a>
-            <a href="#">➕ Add Student</a>
-            <a href="#">📊 Reports</a>
-            <a href="#">⚙️ Settings</a>
+
+            <a
+                href="#dashboard"
+                class="active"
+            >
+                🏠 Dashboard
+            </a>
+
+            <a href="#students">
+                👨‍🎓 Students
+            </a>
+
+            <a href="#addStudentForm">
+                ➕ Add Student
+            </a>
+
+            <a href="#reports">
+                📊 Reports
+            </a>
+
+            <a href="#settings">
+                ⚙️ Settings
+            </a>
+
         </nav>
+
+
+        <div class="sidebar-footer">
+
+            <p>
+                StudentHub v2.1
+            </p>
+
+        </div>
 
     </aside>
 
 
-    <!-- Main Content -->
-    <main class="main-content">
 
-        <!-- Header -->
+    <!-- ==========================================
+         MAIN CONTENT
+    =========================================== -->
+
+    <main
+        class="main-content"
+        id="dashboard"
+    >
+
+
+        <!-- ======================================
+             HEADER
+        ======================================= -->
+
         <header class="header">
 
             <div>
-                <h1>Dashboard</h1>
-                <p>Welcome back, Divyansh!</p>
+
+                <h1>
+                    Dashboard
+                </h1>
+
+                <p>
+                    Welcome to StudentHub
+                </p>
+
             </div>
 
-            <div class="Divyansh">
-                👤 Divyansh
+
+            <div class="header-actions">
+
+                <button
+                    id="themeToggle"
+                    class="theme-btn"
+                    type="button"
+                >
+                    🌙 Dark Mode
+                </button>
+
+
+                <button
+                    id="addStudentBtn"
+                    class="save-btn"
+                    type="button"
+                >
+                    + Add Student
+                </button>
+
             </div>
 
         </header>
 
 
-        <!-- Statistics -->
+
+        <!-- ======================================
+             STATISTICS
+        ======================================= -->
+
         <section class="stats">
 
-           <div class="card">
-    <h3>Total Students</h3>
-    <p id="totalStudents">0</p>
-</div>
 
-<div class="card">
-    <h3>Active Students</h3>
-    <p id="activeStudents">0</p>
-</div>
+            <div class="card">
 
-<div class="card">
-    <h3>Courses</h3>
-    <p id="totalCourses">0</p>
-</div>
+                <div class="card-icon">
+                    👨‍🎓
+                </div>
 
-<div class="card">
-    <h3>Average Grade</h3>
-    <p id="averageGrade">-</p>
-</div>
+                <div>
+
+                    <h3>
+                        Total Students
+                    </h3>
+
+                    <p id="totalStudents">
+                        0
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-icon">
+                    ✅
+                </div>
+
+                <div>
+
+                    <h3>
+                        Active Students
+                    </h3>
+
+                    <p id="activeStudents">
+                        0
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-icon">
+                    📚
+                </div>
+
+                <div>
+
+                    <h3>
+                        Total Courses
+                    </h3>
+
+                    <p id="totalCourses">
+                        0
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-icon">
+                    🎓
+                </div>
+
+                <div>
+
+                    <h3>
+                        Average Grade
+                    </h3>
+
+                    <p id="averageGrade">
+                        -
+                    </p>
+
+                </div>
+
+            </div>
+
+
         </section>
 
-<!-- Add Student Form -->
 
-<section class="add-student-section" id="addStudentForm">
 
-    <h2>Add New Student</h2>
+        <!-- ======================================
+             ADD STUDENT
+        ======================================= -->
 
-    <form id="studentForm">
+        <section
+            class="add-student-section"
+            id="addStudentForm"
+        >
 
-        <div class="form-group">
-            <label for="studentName">Student Name</label>
-            <input
-                type="text"
-                id="studentName"
-                placeholder="Enter student name"
-                required
-            >
-        </div>
+            <div class="section-title">
 
-        <div class="form-group">
-            <label for="studentId">Student ID</label>
-            <input
-                type="text"
-                id="studentId"
-                placeholder="Example: ST004"
-                required
-            >
-        </div>
+                <h2>
+                    Add New Student
+                </h2>
 
-        <div class="form-group">
-            <label for="course">Course</label>
+                <p>
+                    Enter student information below
+                </p>
 
-            <select id="course" required>
-                <option value="">Select Course</option>
-                <option value="BCA">BCA</option>
-                <option value="B.Tech">B.Tech</option>
-                <option value="BBA">BBA</option>
-                <option value="MCA">MCA</option>
-            </select>
-        </div>
+            </div>
 
-        <div class="form-group">
-            <label for="grade">Grade</label>
 
-            <select id="grade" required>
-                <option value="">Select Grade</option>
-                <option value="A+">A+</option>
-                <option value="A">A</option>
-                <option value="B+">B+</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-            </select>
-        </div>
+            <form id="studentForm">
 
-        <button type="submit" class="save-btn">
-            Add Student
-        </button>
 
-    </form>
+                <div class="form-group">
 
-</section>
+                    <label for="studentName">
+                        Student Name
+                    </label>
 
-            <!-- Recent Students -->
-        <section class="students-section">
+                    <input
+                        type="text"
+                        id="studentName"
+                        placeholder="Enter student name"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="studentId">
+                        Student ID
+                    </label>
+
+                    <input
+                        type="text"
+                        id="studentId"
+                        placeholder="Enter student ID"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="course">
+                        Course
+                    </label>
+
+                    <input
+                        type="text"
+                        id="course"
+                        placeholder="Enter course"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="grade">
+                        Grade
+                    </label>
+
+                    <select
+                        id="grade"
+                        required
+                    >
+
+                        <option value="">
+                            Select Grade
+                        </option>
+
+                        <option value="A+">
+                            A+
+                        </option>
+
+                        <option value="A">
+                            A
+                        </option>
+
+                        <option value="B+">
+                            B+
+                        </option>
+
+                        <option value="B">
+                            B
+                        </option>
+
+                        <option value="C">
+                            C
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="save-btn"
+                    id="saveStudentBtn"
+                >
+                    Add Student
+                </button>
+
+
+            </form>
+
+        </section>
+
+
+
+        <!-- ======================================
+             STUDENTS
+        ======================================= -->
+
+        <section
+            class="students-section"
+            id="students"
+        >
+
 
             <div class="section-header">
 
-    <h2>Students</h2>
+                <div>
 
-    <div class="student-actions">
+                    <h2>
+                        Students
+                    </h2>
 
-        <input
-            type="text"
-            id="searchInput"
-            placeholder="🔍 Search students..."
-        >
+                    <p>
+                        Search, filter, sort and manage all students
+                    </p>
 
-        <button id="addStudentBtn">
-            + Add Student
-        </button>
+                </div>
 
-    </div>
+            </div>
 
-</div>
 
+
+            <!-- SEARCH + FILTER -->
+
+            <div class="student-controls">
+
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="🔍 Search by name, ID or course..."
+                >
+
+
+                <select id="courseFilter">
+
+                    <option value="">
+                        All Courses
+                    </option>
+
+                </select>
+
+
+                <select id="gradeFilter">
+
+                    <option value="">
+                        All Grades
+                    </option>
+
+                    <option value="A+">
+                        A+
+                    </option>
+
+                    <option value="A">
+                        A
+                    </option>
+
+                    <option value="B+">
+                        B+
+                    </option>
+
+                    <option value="B">
+                        B
+                    </option>
+
+                    <option value="C">
+                        C
+                    </option>
+
+                </select>
+
+
+                <select id="sortSelect">
+
+                    <option value="createdAt-desc">
+                        Newest First
+                    </option>
+
+                    <option value="createdAt-asc">
+                        Oldest First
+                    </option>
+
+                    <option value="name-asc">
+                        Name A-Z
+                    </option>
+
+                    <option value="name-desc">
+                        Name Z-A
+                    </option>
+
+                    <option value="studentId-asc">
+                        Student ID A-Z
+                    </option>
+
+                    <option value="studentId-desc">
+                        Student ID Z-A
+                    </option>
+
+                    <option value="course-asc">
+                        Course A-Z
+                    </option>
+
+                    <option value="course-desc">
+                        Course Z-A
+                    </option>
+
+                    <option value="grade-desc">
+                        Grade High-Low
+                    </option>
+
+                    <option value="grade-asc">
+                        Grade Low-High
+                    </option>
+
+                </select>
+
+
+                <button
+                    id="clearFiltersBtn"
+                    class="secondary-btn"
+                    type="button"
+                >
+                    Clear Filters
+                </button>
+
+
+            </div>
+
+
+
+            <!-- LOADING -->
+
+            <div
+                id="loadingState"
+                class="loading-state"
+                hidden
+            >
+
+                <div class="spinner"></div>
+
+                <p>
+                    Loading students...
+                </p>
+
+            </div>
+
+
+
+            <!-- TABLE -->
 
             <div class="table-container">
 
                 <table>
 
                     <thead>
-                        <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Student ID</th>
-                        <th>Course</th>
-                        <th>Grade</th>
-                        <th>Actions</th>
-                    </tr>
-</thead>
+
+                        <tr>
+
+                            <th>
+                                Name
+                            </th>
+
+                            <th>
+                                Student ID
+                            </th>
+
+                            <th>
+                                Course
+                            </th>
+
+                            <th>
+                                Grade
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
                     </thead>
 
-                    <tbody id="studentTableBody">
 
-</tbody>
+                    <tbody
+                        id="studentTableBody"
+                    >
+                    </tbody>
 
                 </table>
 
             </div>
 
+
+
+            <!-- EMPTY STATE -->
+
+            <div
+                id="emptyState"
+                class="empty-state"
+                hidden
+            >
+
+                <div>
+                    📭
+                </div>
+
+                <h3>
+                    No students found
+                </h3>
+
+                <p>
+                    Try changing your search or filters,
+                    or add a new student.
+                </p>
+
+            </div>
+
+
+
+            <!-- PAGINATION -->
+
+            <div class="pagination-bar">
+
+                <p id="paginationInfo">
+                    Showing 0 of 0 students
+                </p>
+
+
+                <div
+                    id="paginationControls"
+                    class="pagination-controls"
+                >
+                </div>
+
+
+                <select
+                    id="pageSizeSelect"
+                    aria-label="Students per page"
+                >
+
+                    <option value="5">
+                        5 / page
+                    </option>
+
+                    <option
+                        value="10"
+                        selected
+                    >
+                        10 / page
+                    </option>
+
+                    <option value="20">
+                        20 / page
+                    </option>
+
+                    <option value="50">
+                        50 / page
+                    </option>
+
+                </select>
+
+            </div>
+
+
         </section>
+
+
+
+        <!-- ======================================
+             REPORTS
+        ======================================= -->
+
+        <section
+            class="dashboard-section"
+            id="reports"
+        >
+
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Reports
+                    </h2>
+
+                    <p>
+                        View student statistics and performance
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- REPORT CARDS -->
+
+            <div class="report-cards">
+
+
+                <div class="report-card">
+
+                    <div class="report-icon">
+                        👨‍🎓
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Total Students
+                        </h3>
+
+                        <p id="reportTotalStudents">
+                            0
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="report-card">
+
+                    <div class="report-icon">
+                        📚
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Total Courses
+                        </h3>
+
+                        <p id="reportTotalCourses">
+                            0
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="report-card">
+
+                    <div class="report-icon">
+                        🎓
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Average Grade
+                        </h3>
+
+                        <p id="reportAverageGrade">
+                            -
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- CHARTS -->
+
+            <div class="report-charts">
+
+
+                <div class="chart-card">
+
+                    <h3>
+                        Students by Course
+                    </h3>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="courseChart"
+                        ></canvas>
+
+                    </div>
+
+                </div>
+
+
+                <div class="chart-card">
+
+                    <h3>
+                        Grade Distribution
+                    </h3>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="gradeChart"
+                        ></canvas>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- COURSE REPORT -->
+
+            <div class="report-table-container">
+
+                <div class="section-title">
+
+                    <h3>
+                        Course-wise Student Count
+                    </h3>
+
+                </div>
+
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Course
+                            </th>
+
+                            <th>
+                                Number of Students
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="courseReportBody"
+                    >
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+            <!-- GRADE REPORT -->
+
+            <div class="report-table-container">
+
+                <div class="section-title">
+
+                    <h3>
+                        Grade Distribution
+                    </h3>
+
+                </div>
+
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Grade
+                            </th>
+
+                            <th>
+                                Number of Students
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="gradeReportBody"
+                    >
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+            <!-- EXPORT -->
+
+            <div class="report-actions">
+
+                <button
+                    id="exportReportBtn"
+                    class="secondary-btn"
+                    type="button"
+                >
+                    📥 Export Student Report
+                </button>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- ======================================
+             SETTINGS
+        ======================================= -->
+
+        <section
+            class="dashboard-section"
+            id="settings"
+        >
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Settings
+                    </h2>
+
+                    <p>
+                        Application information
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="settings-card">
+
+
+                <div class="setting-item">
+
+                    <div>
+
+                        <h3>
+                            Application
+                        </h3>
+
+                        <p>
+                            StudentHub Student Management System
+                        </p>
+
+                    </div>
+
+                    <span class="status-badge">
+                        Active
+                    </span>
+
+                </div>
+
+
+                <div class="setting-item">
+
+                    <div>
+
+                        <h3>
+                            Database
+                        </h3>
+
+                        <p>
+                            MongoDB Atlas
+                        </p>
+
+                    </div>
+
+                    <span class="status-badge">
+                        Connected
+                    </span>
+
+                </div>
+
+
+                <div class="setting-item">
+
+                    <div>
+
+                        <h3>
+                            Backend
+                        </h3>
+
+                        <p>
+                            Node.js + Express
+                        </p>
+
+                    </div>
+
+                    <span class="status-badge">
+                        Running
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
 
     </main>
 
 
-    <script src="script.js"></script>
+
+    <!-- ==========================================
+         EDIT STUDENT MODAL
+    =========================================== -->
+
+    <div
+        class="modal"
+        id="editModal"
+    >
+
+        <div class="modal-content">
+
+
+            <div class="modal-header">
+
+                <h2>
+                    Edit Student
+                </h2>
+
+
+                <button
+                    type="button"
+                    class="close-modal"
+                    id="closeEditModal"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+
+            <form
+                id="editStudentForm"
+            >
+
+
+                <input
+                    type="hidden"
+                    id="editMongoId"
+                >
+
+
+                <div class="form-group">
+
+                    <label for="editStudentName">
+                        Student Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editStudentName"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editStudentId">
+                        Student ID
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editStudentId"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editCourse">
+                        Course
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editCourse"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="editGrade">
+                        Grade
+                    </label>
+
+                    <select
+                        id="editGrade"
+                        required
+                    >
+
+                        <option value="A+">
+                            A+
+                        </option>
+
+                        <option value="A">
+                            A
+                        </option>
+
+                        <option value="B+">
+                            B+
+                        </option>
+
+                        <option value="B">
+                            B
+                        </option>
+
+                        <option value="C">
+                            C
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="save-btn"
+                    id="updateStudentBtn"
+                >
+                    Update Student
+                </button>
+
+
+            </form>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ==========================================
+         STUDENT PROFILE MODAL
+    =========================================== -->
+
+    <div
+        class="modal"
+        id="profileModal"
+    >
+
+        <div class="modal-content profile-modal">
+
+
+            <div class="modal-header">
+
+                <h2>
+                    Student Profile
+                </h2>
+
+
+                <button
+                    type="button"
+                    class="close-modal"
+                    id="closeProfileModal"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+
+            <!-- PROFILE HEADER -->
+
+            <div class="profile-header">
+
+                <div
+                    class="profile-avatar"
+                    id="profileAvatar"
+                >
+                    ?
+                </div>
+
+
+                <div>
+
+                    <h2
+                        id="profileName"
+                    >
+                        Student Name
+                    </h2>
+
+                    <p
+                        id="profileStudentId"
+                    >
+                        Student ID
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- PROFILE INFORMATION -->
+
+            <div class="profile-details">
+
+
+                <div class="profile-detail-card">
+
+                    <span>
+                        🎓
+                    </span>
+
+                    <div>
+
+                        <small>
+                            Course
+                        </small>
+
+                        <strong
+                            id="profileCourse"
+                        >
+                            -
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-detail-card">
+
+                    <span>
+                        🏆
+                    </span>
+
+                    <div>
+
+                        <small>
+                            Grade
+                        </small>
+
+                        <strong
+                            id="profileGrade"
+                        >
+                            -
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-detail-card">
+
+                    <span>
+                        📅
+                    </span>
+
+                    <div>
+
+                        <small>
+                            Added On
+                        </small>
+
+                        <strong
+                            id="profileCreatedAt"
+                        >
+                            -
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-detail-card">
+
+                    <span>
+                        🟢
+                    </span>
+
+                    <div>
+
+                        <small>
+                            Status
+                        </small>
+
+                        <strong>
+                            Active
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- PROFILE ACTIONS -->
+
+            <div class="profile-actions">
+
+                <button
+                    id="profileEditBtn"
+                    class="save-btn"
+                    type="button"
+                >
+                    ✏️ Edit Student
+                </button>
+
+
+                <button
+                    id="profileDeleteBtn"
+                    class="delete-profile-btn"
+                    type="button"
+                >
+                    🗑️ Delete Student
+                </button>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ==========================================
+         TOAST
+    =========================================== -->
+
+    <div
+        id="toastContainer"
+        class="toast-container"
+    >
+    </div>
+
+
+
+    <!-- ==========================================
+         CHART.JS
+    =========================================== -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js"
+    ></script>
+
+
+    <!-- ==========================================
+         MAIN JAVASCRIPT
+    =========================================== -->
+
+    <script
+        src="script.js"
+    ></script>
+
 
 </body>
 

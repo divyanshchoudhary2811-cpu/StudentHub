@@ -2,71 +2,86 @@
 // STUDENT HUB - FRONTEND JAVASCRIPT
 // ==========================================
 
-const API_URL = "http://localhost:5000/api/students";
+const API_URL =
+    "http://localhost:5000/api/students";
 
 
 // ==========================================
-// 1. LOAD STUDENTS
+// GLOBAL VARIABLES
 // ==========================================
 
-async function loadStudents() {
+let allStudents = [];
 
-    try {
+let filteredStudents = [];
 
-        const response = await fetch(API_URL);
+let currentPage = 1;
 
-        if (!response.ok) {
-            throw new Error("Failed to load students");
-        }
+let pageSize = 5;
 
-        const students = await response.json();
+let courseChart = null;
 
-        // Update dashboard statistics
-        updateDashboardStats(students);
+let gradeChart = null;
 
-        const tableBody =
-            document.getElementById("studentTableBody");
+let selectedProfileStudent = null;
 
-        if (!tableBody) {
-            console.error("studentTableBody not found");
-            return;
-        }
 
-        tableBody.innerHTML = "";
+// ==========================================
+// DOM CONTENT LOADED
+// ==========================================
 
-        students.forEach(function (student) {
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-            const row = document.createElement("tr");
+        // Check login first
+        checkLogin();
 
-            // Store MongoDB ID
-            row.dataset.id = student._id;
+        loadStudents();
 
-            row.innerHTML = `
-                <td>${student.name}</td>
-                <td>${student.studentId}</td>
-                <td>${student.course}</td>
-                <td>${student.grade}</td>
+        setupNavigation();
 
-                <td>
-                    <button class="edit-btn">
-                        Edit
-                    </button>
+        setupAddStudent();
 
-                    <button class="delete-btn">
-                        Delete
-                    </button>
-                </td>
-            `;
+        setupFilters();
 
-            tableBody.appendChild(row);
+        setupEditModal();
 
-        });
+        setupProfileModal();
 
-        console.log("Students loaded successfully");
+        setupThemeToggle();
 
-    } catch (error) {
+        setupExport();
 
-        console.error("Error loading students:", error);
+        setupLogout();
+
+    }
+);
+
+
+// ==========================================
+// CHECK LOGIN
+// ==========================================
+
+function checkLogin() {
+
+    const loggedIn =
+        sessionStorage.getItem(
+            "studenthubLoggedIn"
+        );
+
+    const token =
+        sessionStorage.getItem(
+            "studenthubToken"
+        );
+
+
+    if (
+        loggedIn !== "true" ||
+        !token
+    ) {
+
+        window.location.href =
+            "login.html";
 
     }
 
@@ -74,98 +89,457 @@ async function loadStudents() {
 
 
 // ==========================================
-// 2. ADD STUDENT
+// GET AUTH HEADERS
+// ==========================================
+
+function getAuthHeaders() {
+
+    const token =
+        sessionStorage.getItem(
+            "studenthubToken"
+        );
+
+
+    return {
+
+        "Content-Type":
+            "application/json",
+
+        "Authorization":
+            `Bearer ${token}`
+
+    };
+
+}
+
+
+// ==========================================
+// HANDLE UNAUTHORIZED
+// ==========================================
+
+function handleUnauthorized() {
+
+    sessionStorage.removeItem(
+        "studenthubLoggedIn"
+    );
+
+    sessionStorage.removeItem(
+        "studenthubToken"
+    );
+
+    sessionStorage.removeItem(
+        "studenthubUsername"
+    );
+
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+// ==========================================
+// TOAST NOTIFICATION
+// ==========================================
+
+function showToast(
+    message,
+    type = "success"
+) {
+
+    const container =
+        document.getElementById(
+            "toastContainer"
+        );
+
+
+    if (!container) return;
+
+
+    const toast =
+        document.createElement(
+            "div"
+        );
+
+
+    toast.className =
+        `toast ${type}`;
+
+
+    toast.textContent =
+        message;
+
+
+    container.appendChild(
+        toast
+    );
+
+
+    setTimeout(
+        function () {
+
+            toast.classList.add(
+                "hide"
+            );
+
+
+            setTimeout(
+                function () {
+
+                    toast.remove();
+
+                },
+                300
+            );
+
+        },
+        3000
+    );
+
+}
+
+
+// ==========================================
+// LOADING STATE
+// ==========================================
+
+function setLoading(isLoading) {
+
+    const loadingState =
+        document.getElementById(
+            "loadingState"
+        );
+
+
+    if (!loadingState) return;
+
+
+    loadingState.style.display =
+        isLoading
+            ? "block"
+            : "none";
+
+}
+
+
+// ==========================================
+// LOAD STUDENTS
+// ==========================================
+
+async function loadStudents() {
+
+    setLoading(true);
+
+
+    try {
+
+        const response =
+            await fetch(
+                API_URL,
+                {
+
+                    method: "GET",
+
+                    headers:
+                        getAuthHeaders()
+
+                }
+            );
+
+
+        // Token expired / unauthorized
+
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
+
+            handleUnauthorized();
+
+            return;
+
+        }
+
+
+        const responseText =
+            await response.text();
+
+
+        let data = [];
+
+
+        try {
+
+            data =
+                responseText
+                    ? JSON.parse(
+                        responseText
+                    )
+                    : [];
+
+        } catch {
+
+            data = [];
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+
+                data.message ||
+                "Failed to load students"
+
+            );
+
+        }
+
+
+        allStudents =
+            Array.isArray(data)
+                ? data
+                : [];
+
+
+        filteredStudents =
+            [...allStudents];
+
+
+        currentPage = 1;
+
+
+        populateCourseFilter();
+
+        applyFilters();
+
+        updateDashboard();
+
+        updateReports();
+
+
+    } catch (error) {
+
+        console.error(
+            "Load students error:",
+            error
+        );
+
+
+        showToast(
+
+            error.message ||
+            "Unable to load students.",
+
+            "error"
+
+        );
+
+    } finally {
+
+        setLoading(false);
+
+    }
+
+}
+
+
+// ==========================================
+// ADD STUDENT
 // ==========================================
 
 async function addStudent(event) {
 
     event.preventDefault();
 
-    console.log("Add Student button clicked");
 
     const name =
-        document.getElementById("studentName").value.trim();
+        document.getElementById(
+            "studentName"
+        ).value.trim();
+
 
     const studentId =
-        document.getElementById("studentId").value.trim();
+        document.getElementById(
+            "studentId"
+        ).value.trim();
+
 
     const course =
-        document.getElementById("course").value.trim();
+        document.getElementById(
+            "course"
+        ).value.trim();
+
 
     const grade =
-        document.getElementById("grade").value.trim();
+        document.getElementById(
+            "grade"
+        ).value;
 
 
-    if (!name || !studentId || !course || !grade) {
+    if (
+        !name ||
+        !studentId ||
+        !course ||
+        !grade
+    ) {
 
-        alert("Please fill all fields.");
+        showToast(
+            "Please fill all fields.",
+            "error"
+        );
 
         return;
+
     }
 
 
-    const studentData = {
+    const saveButton =
+        document.getElementById(
+            "saveStudentBtn"
+        );
 
-        name: name,
 
-        studentId: studentId,
+    if (saveButton) {
 
-        course: course,
+        saveButton.disabled =
+            true;
 
-        grade: grade
+        saveButton.textContent =
+            "Saving...";
 
-    };
+    }
 
 
     try {
 
-        const response = await fetch(API_URL, {
+        const response =
+            await fetch(
+                API_URL,
+                {
 
-            method: "POST",
+                    method: "POST",
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+                    headers:
+                        getAuthHeaders(),
 
-            body: JSON.stringify(studentData)
+                    body:
+                        JSON.stringify({
 
-        });
+                            name:
+                                name,
+
+                            studentId:
+                                studentId,
+
+                            course:
+                                course,
+
+                            grade:
+                                grade
+
+                        })
+
+                }
+            );
 
 
-        if (!response.ok) {
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
 
-            const errorData =
-                await response.json();
+            handleUnauthorized();
 
-            console.error(errorData);
-
-            throw new Error("Failed to add student");
+            return;
 
         }
 
 
-        const newStudent =
-            await response.json();
-
-        console.log("Student added:", newStudent);
+        const responseText =
+            await response.text();
 
 
-        document.getElementById("studentForm").reset();
+        let data = {};
+
+
+        try {
+
+            data =
+                responseText
+                    ? JSON.parse(
+                        responseText
+                    )
+                    : {};
+
+        } catch {
+
+            data = {};
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+
+                data.message ||
+                "Failed to add student"
+
+            );
+
+        }
+
+
+        showToast(
+            "Student added successfully!",
+            "success"
+        );
+
+
+        document
+            .getElementById(
+                "studentForm"
+            )
+            .reset();
 
 
         await loadStudents();
 
 
-        alert("Student added successfully!");
+        showSection(
+            "students"
+        );
 
 
     } catch (error) {
 
-        console.error("Add student error:", error);
-
-        alert(
-            "Could not add student. Make sure the backend is running."
+        console.error(
+            "Add student error:",
+            error
         );
+
+
+        showToast(
+
+            error.message ||
+            "Unable to add student.",
+
+            "error"
+
+        );
+
+    } finally {
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                false;
+
+            saveButton.textContent =
+                "Save Student";
+
+        }
 
     }
 
@@ -173,69 +547,883 @@ async function addStudent(event) {
 
 
 // ==========================================
-// 3. SEARCH STUDENTS
+// POPULATE COURSE FILTER
 // ==========================================
 
-function searchStudents() {
+function populateCourseFilter() {
 
-    const searchInput =
-        document.getElementById("searchInput");
-
-    const searchText =
-        searchInput.value.toLowerCase();
-
-    const rows =
-        document.querySelectorAll(
-            "#studentTableBody tr"
+    const courseFilter =
+        document.getElementById(
+            "courseFilter"
         );
 
 
-    rows.forEach(function (row) {
+    if (!courseFilter) return;
 
-        const rowText =
-            row.textContent.toLowerCase();
 
-        if (rowText.includes(searchText)) {
+    const currentValue =
+        courseFilter.value;
 
-            row.style.display = "";
 
-        } else {
+    const courses =
+        [
+            ...new Set(
 
-            row.style.display = "none";
+                allStudents
+
+                    .map(
+                        student =>
+                            student.course
+                    )
+
+                    .filter(Boolean)
+
+            )
+        ].sort();
+
+
+    courseFilter.innerHTML =
+        `<option value="">
+            All Courses
+        </option>`;
+
+
+    courses.forEach(
+        function (course) {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                course;
+
+
+            option.textContent =
+                course;
+
+
+            courseFilter.appendChild(
+                option
+            );
 
         }
+    );
 
-    });
+
+    courseFilter.value =
+        currentValue;
 
 }
 
 
 // ==========================================
-// 4. DELETE STUDENT
+// APPLY FILTERS
 // ==========================================
 
-async function deleteStudent(row) {
+function applyFilters() {
 
-    const mongoId =
-        row.dataset.id;
+    const searchInput =
+        document.getElementById(
+            "searchInput"
+        );
 
 
-    if (!mongoId) {
+    const courseFilter =
+        document.getElementById(
+            "courseFilter"
+        );
 
-        alert("Student ID not found.");
+
+    const gradeFilter =
+        document.getElementById(
+            "gradeFilter"
+        );
+
+
+    const sortSelect =
+        document.getElementById(
+            "sortSelect"
+        );
+
+
+    const search =
+        searchInput
+            ? searchInput.value
+                .trim()
+                .toLowerCase()
+            : "";
+
+
+    const course =
+        courseFilter
+            ? courseFilter.value
+            : "";
+
+
+    const grade =
+        gradeFilter
+            ? gradeFilter.value
+            : "";
+
+
+    filteredStudents =
+        allStudents.filter(
+            function (student) {
+
+                const matchesSearch =
+
+                    !search ||
+
+                    String(
+                        student.name || ""
+                    )
+                        .toLowerCase()
+                        .includes(search)
+
+                    ||
+
+                    String(
+                        student.studentId || ""
+                    )
+                        .toLowerCase()
+                        .includes(search)
+
+                    ||
+
+                    String(
+                        student.course || ""
+                    )
+                        .toLowerCase()
+                        .includes(search);
+
+
+                const matchesCourse =
+                    !course ||
+                    student.course ===
+                        course;
+
+
+                const matchesGrade =
+                    !grade ||
+                    student.grade ===
+                        grade;
+
+
+                return (
+                    matchesSearch &&
+                    matchesCourse &&
+                    matchesGrade
+                );
+
+            }
+        );
+
+
+    sortStudents(
+        sortSelect
+            ? sortSelect.value
+            : "newest"
+    );
+
+
+    currentPage = 1;
+
+
+    renderStudents();
+
+    renderPagination();
+
+}
+
+
+// ==========================================
+// SORT STUDENTS
+// ==========================================
+
+function sortStudents(
+    sortValue
+) {
+
+    if (!sortValue) return;
+
+
+    filteredStudents.sort(
+        function (a, b) {
+
+            switch (sortValue) {
+
+                case "name-asc":
+
+                    return String(
+                        a.name
+                    ).localeCompare(
+                        String(
+                            b.name
+                        )
+                    );
+
+
+                case "name-desc":
+
+                    return String(
+                        b.name
+                    ).localeCompare(
+                        String(
+                            a.name
+                        )
+                    );
+
+
+                case "grade-asc":
+
+                    return (
+                        getGradeValue(
+                            a.grade
+                        )
+                        -
+                        getGradeValue(
+                            b.grade
+                        )
+                    );
+
+
+                case "grade-desc":
+
+                    return (
+                        getGradeValue(
+                            b.grade
+                        )
+                        -
+                        getGradeValue(
+                            a.grade
+                        )
+                    );
+
+
+                case "oldest":
+
+                    return (
+                        new Date(
+                            a.createdAt
+                        )
+                        -
+                        new Date(
+                            b.createdAt
+                        )
+                    );
+
+
+                case "newest":
+
+                default:
+
+                    return (
+                        new Date(
+                            b.createdAt
+                        )
+                        -
+                        new Date(
+                            a.createdAt
+                        )
+                    );
+
+            }
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// GRADE VALUE
+// ==========================================
+
+function getGradeValue(
+    grade
+) {
+
+    const grades = {
+
+        "A+": 5,
+
+        "A": 4,
+
+        "B+": 3,
+
+        "B": 2,
+
+        "C": 1
+
+    };
+
+
+    return grades[grade] || 0;
+
+}
+
+
+// ==========================================
+// RENDER STUDENTS
+// ==========================================
+
+function renderStudents() {
+
+    const tableBody =
+        document.getElementById(
+            "studentTableBody"
+        );
+
+
+    const emptyState =
+        document.getElementById(
+            "emptyState"
+        );
+
+
+    if (!tableBody) return;
+
+
+    tableBody.innerHTML = "";
+
+
+    if (
+        filteredStudents.length ===
+        0
+    ) {
+
+        if (emptyState) {
+
+            emptyState.style.display =
+                "block";
+
+        }
 
         return;
 
     }
 
 
-    const confirmDelete =
-        confirm(
-            "Are you sure you want to delete this student?"
+    if (emptyState) {
+
+        emptyState.style.display =
+            "none";
+
+    }
+
+
+    const start =
+        (
+            currentPage - 1
+        ) * pageSize;
+
+
+    const end =
+        start + pageSize;
+
+
+    const pageStudents =
+        filteredStudents.slice(
+            start,
+            end
         );
 
 
-    if (!confirmDelete) {
+    pageStudents.forEach(
+        function (student) {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${escapeHtml(
+                        student.name
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        student.studentId
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHtml(
+                        student.course
+                    )}
+                </td>
+
+                <td>
+                    <span class="grade-badge">
+                        ${escapeHtml(
+                            student.grade
+                        )}
+                    </span>
+                </td>
+
+                <td>
+                    ${formatDate(
+                        student.createdAt
+                    )}
+                </td>
+
+                <td>
+
+                    <button
+                        class="view-btn"
+                        data-id="${
+                            student._id
+                        }">
+
+                        View
+
+                    </button>
+
+
+                    <button
+                        class="edit-btn"
+                        data-id="${
+                            student._id
+                        }">
+
+                        Edit
+
+                    </button>
+
+
+                    <button
+                        class="delete-btn"
+                        data-id="${
+                            student._id
+                        }">
+
+                        Delete
+
+                    </button>
+
+                </td>
+
+            `;
+
+
+            tableBody.appendChild(
+                row
+            );
+
+        }
+    );
+
+
+    setupTableButtons();
+
+}
+
+
+// ==========================================
+// TABLE BUTTONS
+// ==========================================
+
+function setupTableButtons() {
+
+    const viewButtons =
+        document.querySelectorAll(
+            ".view-btn"
+        );
+
+
+    const editButtons =
+        document.querySelectorAll(
+            ".edit-btn"
+        );
+
+
+    const deleteButtons =
+        document.querySelectorAll(
+            ".delete-btn"
+        );
+
+
+    viewButtons.forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    viewStudentProfile(
+                        this.dataset.id
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    editButtons.forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    editStudent(
+                        this.dataset.id
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    deleteButtons.forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    deleteStudent(
+                        this.dataset.id
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// PAGINATION
+// ==========================================
+
+function renderPagination() {
+
+    const paginationControls =
+        document.getElementById(
+            "paginationControls"
+        );
+
+
+    const paginationInfo =
+        document.getElementById(
+            "paginationInfo"
+        );
+
+
+    if (
+        !paginationControls ||
+        !paginationInfo
+    ) {
+
+        return;
+
+    }
+
+
+    const total =
+        filteredStudents.length;
+
+
+    const totalPages =
+        Math.ceil(
+            total / pageSize
+        );
+
+
+    if (total === 0) {
+
+        paginationInfo.textContent =
+            "No students found";
+
+
+        paginationControls.innerHTML =
+            "";
+
+
+        return;
+
+    }
+
+
+    const start =
+        (
+            currentPage - 1
+        ) * pageSize + 1;
+
+
+    const end =
+        Math.min(
+            currentPage * pageSize,
+            total
+        );
+
+
+    paginationInfo.textContent =
+        `Showing ${start}-${end} of ${total} students`;
+
+
+    paginationControls.innerHTML =
+        "";
+
+
+    if (totalPages <= 1) {
+
+        return;
+
+    }
+
+
+    const previousButton =
+        document.createElement(
+            "button"
+        );
+
+
+    previousButton.textContent =
+        "Previous";
+
+
+    previousButton.disabled =
+        currentPage === 1;
+
+
+    previousButton.addEventListener(
+        "click",
+        function () {
+
+            if (
+                currentPage > 1
+            ) {
+
+                currentPage--;
+
+                renderStudents();
+
+                renderPagination();
+
+            }
+
+        }
+    );
+
+
+    paginationControls.appendChild(
+        previousButton
+    );
+
+
+    for (
+        let page = 1;
+        page <= totalPages;
+        page++
+    ) {
+
+        const pageButton =
+            document.createElement(
+                "button"
+            );
+
+
+        pageButton.textContent =
+            page;
+
+
+        if (
+            page === currentPage
+        ) {
+
+            pageButton.classList.add(
+                "active"
+            );
+
+        }
+
+
+        pageButton.addEventListener(
+            "click",
+            function () {
+
+                currentPage =
+                    page;
+
+
+                renderStudents();
+
+                renderPagination();
+
+            }
+        );
+
+
+        paginationControls.appendChild(
+            pageButton
+        );
+
+    }
+
+
+    const nextButton =
+        document.createElement(
+            "button"
+        );
+
+
+    nextButton.textContent =
+        "Next";
+
+
+    nextButton.disabled =
+        currentPage ===
+        totalPages;
+
+
+    nextButton.addEventListener(
+        "click",
+        function () {
+
+            if (
+                currentPage <
+                totalPages
+            ) {
+
+                currentPage++;
+
+                renderStudents();
+
+                renderPagination();
+
+            }
+
+        }
+    );
+
+
+    paginationControls.appendChild(
+        nextButton
+    );
+
+}
+
+
+// ==========================================
+// CLEAR FILTERS
+// ==========================================
+
+function clearFilters() {
+
+    const searchInput =
+        document.getElementById(
+            "searchInput"
+        );
+
+
+    const courseFilter =
+        document.getElementById(
+            "courseFilter"
+        );
+
+
+    const gradeFilter =
+        document.getElementById(
+            "gradeFilter"
+        );
+
+
+    const sortSelect =
+        document.getElementById(
+            "sortSelect"
+        );
+
+
+    if (searchInput) {
+
+        searchInput.value =
+            "";
+
+    }
+
+
+    if (courseFilter) {
+
+        courseFilter.value =
+            "";
+
+    }
+
+
+    if (gradeFilter) {
+
+        gradeFilter.value =
+            "";
+
+    }
+
+
+    if (sortSelect) {
+
+        sortSelect.value =
+            "newest";
+
+    }
+
+
+    currentPage = 1;
+
+
+    applyFilters();
+
+}
+
+
+// ==========================================
+// DELETE STUDENT
+// ==========================================
+
+async function deleteStudent(
+    id
+) {
+
+    const student =
+        allStudents.find(
+            student =>
+                student._id === id
+        );
+
+
+    if (!student) {
+
+        showToast(
+            "Student not found.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            `Delete ${student.name}?`
+        );
+
+
+    if (!confirmed) {
 
         return;
 
@@ -246,18 +1434,77 @@ async function deleteStudent(row) {
 
         const response =
             await fetch(
-                `${API_URL}/${mongoId}`,
+                `${API_URL}/${id}`,
                 {
-                    method: "DELETE"
+
+                    method: "DELETE",
+
+                    headers:
+                        getAuthHeaders()
+
                 }
             );
+
+
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
+
+            handleUnauthorized();
+
+            return;
+
+        }
+
+
+        const responseText =
+            await response.text();
+
+
+        let data = {};
+
+
+        try {
+
+            data =
+                responseText
+                    ? JSON.parse(
+                        responseText
+                    )
+                    : {};
+
+        } catch {
+
+            data = {};
+
+        }
 
 
         if (!response.ok) {
 
             throw new Error(
+
+                data.message ||
                 "Failed to delete student"
+
             );
+
+        }
+
+
+        showToast(
+            "Student deleted successfully!",
+            "success"
+        );
+
+
+        if (
+            selectedProfileStudent &&
+            selectedProfileStudent._id === id
+        ) {
+
+            closeProfileModal();
 
         }
 
@@ -265,21 +1512,21 @@ async function deleteStudent(row) {
         await loadStudents();
 
 
-        alert(
-            "Student deleted successfully!"
-        );
-
-
     } catch (error) {
 
         console.error(
-            "Delete student error:",
+            "Delete error:",
             error
         );
 
 
-        alert(
-            "Could not delete student."
+        showToast(
+
+            error.message ||
+            "Unable to delete student.",
+
+            "error"
+
         );
 
     }
@@ -288,113 +1535,174 @@ async function deleteStudent(row) {
 
 
 // ==========================================
-// 5. EDIT STUDENT
+// EDIT STUDENT
 // ==========================================
 
-async function editStudent(row) {
+function editStudent(id) {
+
+    const student =
+        allStudents.find(
+            student =>
+                student._id === id
+        );
+
+
+    if (!student) {
+
+        showToast(
+            "Student not found.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const modal =
+        document.getElementById(
+            "editModal"
+        );
+
+
+    if (!modal) return;
+
+
+    document.getElementById(
+        "editMongoId"
+    ).value =
+        student._id;
+
+
+    document.getElementById(
+        "editStudentName"
+    ).value =
+        student.name;
+
+
+    document.getElementById(
+        "editStudentId"
+    ).value =
+        student.studentId;
+
+
+    document.getElementById(
+        "editCourse"
+    ).value =
+        student.course;
+
+
+    document.getElementById(
+        "editGrade"
+    ).value =
+        student.grade;
+
+
+    modal.style.display =
+        "flex";
+
+}
+
+
+// ==========================================
+// UPDATE STUDENT
+// ==========================================
+
+async function updateStudent(
+    event
+) {
+
+    event.preventDefault();
+
+
+    console.log(
+        "Update button clicked"
+    );
+
 
     const mongoId =
-        row.dataset.id;
+        document.getElementById(
+            "editMongoId"
+        ).value;
 
 
     if (!mongoId) {
 
-        alert("Student ID not found.");
+        showToast(
+            "Student ID is missing.",
+            "error"
+        );
 
         return;
 
     }
-
-
-    const currentName =
-        row.cells[0].textContent;
-
-    const currentStudentId =
-        row.cells[1].textContent;
-
-    const currentCourse =
-        row.cells[2].textContent;
-
-    const currentGrade =
-        row.cells[3].textContent;
 
 
     const name =
-        prompt(
-            "Enter student name:",
-            currentName
-        );
-
-
-    if (name === null) {
-        return;
-    }
+        document.getElementById(
+            "editStudentName"
+        ).value.trim();
 
 
     const studentId =
-        prompt(
-            "Enter student ID:",
-            currentStudentId
-        );
-
-
-    if (studentId === null) {
-        return;
-    }
+        document.getElementById(
+            "editStudentId"
+        ).value.trim();
 
 
     const course =
-        prompt(
-            "Enter course:",
-            currentCourse
-        );
-
-
-    if (course === null) {
-        return;
-    }
+        document.getElementById(
+            "editCourse"
+        ).value.trim();
 
 
     const grade =
-        prompt(
-            "Enter grade:",
-            currentGrade
-        );
-
-
-    if (grade === null) {
-        return;
-    }
+        document.getElementById(
+            "editGrade"
+        ).value;
 
 
     if (
-        !name.trim() ||
-        !studentId.trim() ||
-        !course.trim() ||
-        !grade.trim()
+        !name ||
+        !studentId ||
+        !course ||
+        !grade
     ) {
 
-        alert("All fields are required.");
+        showToast(
+            "Please fill all fields.",
+            "error"
+        );
 
         return;
 
     }
 
 
-    const updatedData = {
+    const updateButton =
+        document.getElementById(
+            "updateStudentBtn"
+        );
 
-        name: name.trim(),
 
-        studentId: studentId.trim(),
+    if (updateButton) {
 
-        course: course.trim(),
+        updateButton.disabled =
+            true;
 
-        grade: grade.trim()
+        updateButton.textContent =
+            "Updating...";
 
-    };
+    }
 
 
     try {
+
+        console.log(
+            "Updating student:",
+            mongoId
+        );
+
 
         const response =
             await fetch(
@@ -403,56 +1711,123 @@ async function editStudent(row) {
 
                     method: "PUT",
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
+                    headers:
+                        getAuthHeaders(),
 
                     body:
-                        JSON.stringify(updatedData)
+                        JSON.stringify({
+
+                            name:
+                                name,
+
+                            studentId:
+                                studentId,
+
+                            course:
+                                course,
+
+                            grade:
+                                grade
+
+                        })
 
                 }
             );
 
 
+        if (
+            response.status === 401 ||
+            response.status === 403
+        ) {
+
+            handleUnauthorized();
+
+            return;
+
+        }
+
+
+        const responseText =
+            await response.text();
+
+
+        console.log(
+            "Server response:",
+            responseText
+        );
+
+
+        let data = {};
+
+
+        try {
+
+            data =
+                responseText
+                    ? JSON.parse(
+                        responseText
+                    )
+                    : {};
+
+        } catch {
+
+            data = {};
+
+        }
+
+
         if (!response.ok) {
 
             throw new Error(
-                "Failed to update student"
+
+                data.message ||
+                `Update failed (${response.status})`
+
             );
 
         }
 
 
-        const updatedStudent =
-            await response.json();
-
-
-        console.log(
-            "Student updated:",
-            updatedStudent
+        showToast(
+            "Student updated successfully!",
+            "success"
         );
+
+
+        closeEditModal();
 
 
         await loadStudents();
 
 
-        alert(
-            "Student updated successfully!"
-        );
-
-
     } catch (error) {
 
         console.error(
-            "Edit student error:",
+            "Update student error:",
             error
         );
 
 
-        alert(
-            "Could not update student."
+        showToast(
+
+            error.message ||
+            "Unable to update student.",
+
+            "error"
+
         );
+
+    } finally {
+
+        if (updateButton) {
+
+            updateButton.disabled =
+                false;
+
+            updateButton.textContent =
+                "Update Student";
+
+        }
 
     }
 
@@ -460,21 +1835,25 @@ async function editStudent(row) {
 
 
 // ==========================================
-// 6. TABLE BUTTONS
+// VIEW STUDENT PROFILE
 // ==========================================
 
-function setupTableButtons() {
+function viewStudentProfile(
+    id
+) {
 
-    const tableBody =
-        document.getElementById(
-            "studentTableBody"
+    const student =
+        allStudents.find(
+            student =>
+                student._id === id
         );
 
 
-    if (!tableBody) {
+    if (!student) {
 
-        console.error(
-            "studentTableBody not found"
+        showToast(
+            "Student not found.",
+            "error"
         );
 
         return;
@@ -482,41 +1861,197 @@ function setupTableButtons() {
     }
 
 
-    tableBody.addEventListener(
-        "click",
-        async function (event) {
-
-            const row =
-                event.target.closest("tr");
+    selectedProfileStudent =
+        student;
 
 
-            if (!row) {
-                return;
-            }
+    const modal =
+        document.getElementById(
+            "profileModal"
+        );
 
 
-            // DELETE
-            if (
-                event.target.classList.contains(
-                    "delete-btn"
-                )
-            ) {
-
-                await deleteStudent(row);
-
-            }
+    if (!modal) return;
 
 
-            // EDIT
-            if (
-                event.target.classList.contains(
-                    "edit-btn"
-                )
-            ) {
+    const avatar =
+        document.getElementById(
+            "profileAvatar"
+        );
 
-                await editStudent(row);
 
-            }
+    const name =
+        document.getElementById(
+            "profileName"
+        );
+
+
+    const studentId =
+        document.getElementById(
+            "profileStudentId"
+        );
+
+
+    const course =
+        document.getElementById(
+            "profileCourse"
+        );
+
+
+    const grade =
+        document.getElementById(
+            "profileGrade"
+        );
+
+
+    const createdAt =
+        document.getElementById(
+            "profileCreatedAt"
+        );
+
+
+    if (avatar) {
+
+        avatar.textContent =
+            getInitials(
+                student.name
+            );
+
+    }
+
+
+    if (name) {
+
+        name.textContent =
+            student.name;
+
+    }
+
+
+    if (studentId) {
+
+        studentId.textContent =
+            student.studentId;
+
+    }
+
+
+    if (course) {
+
+        course.textContent =
+            student.course;
+
+    }
+
+
+    if (grade) {
+
+        grade.textContent =
+            student.grade;
+
+    }
+
+
+    if (createdAt) {
+
+        createdAt.textContent =
+            formatDate(
+                student.createdAt
+            );
+
+    }
+
+
+    modal.style.display =
+        "flex";
+
+}
+
+
+// ==========================================
+// GET INITIALS
+// ==========================================
+
+function getInitials(name) {
+
+    if (!name) {
+
+        return "?";
+
+    }
+
+
+    const words =
+        name
+            .trim()
+            .split(/\s+/);
+
+
+    if (
+        words.length === 1
+    ) {
+
+        return words[0]
+            .substring(0, 2)
+            .toUpperCase();
+
+    }
+
+
+    return (
+
+        words[0][0] +
+
+        words[
+            words.length - 1
+        ][0]
+
+    ).toUpperCase();
+
+}
+
+
+// ==========================================
+// FORMAT DATE
+// ==========================================
+
+function formatDate(
+    dateString
+) {
+
+    if (!dateString) {
+
+        return "-";
+
+    }
+
+
+    const date =
+        new Date(
+            dateString
+        );
+
+
+    if (
+        isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "-";
+
+    }
+
+
+    return date.toLocaleDateString(
+        "en-IN",
+        {
+
+            day: "2-digit",
+
+            month: "short",
+
+            year: "numeric"
 
         }
     );
@@ -525,162 +2060,1519 @@ function setupTableButtons() {
 
 
 // ==========================================
-// 7. DASHBOARD STATISTICS
+// CLOSE PROFILE MODAL
 // ==========================================
 
-function updateDashboardStats(students) {
+function closeProfileModal() {
 
-    // Total students
-    document.getElementById("totalStudents").textContent =
-        students.length;
-
-
-    // Active students
-    // Currently every student is considered active
-    document.getElementById("activeStudents").textContent =
-        students.length;
+    const modal =
+        document.getElementById(
+            "profileModal"
+        );
 
 
-    // Unique courses
-    const courses = new Set(
-        students.map(function (student) {
-            return student.course;
-        })
-    );
+    if (modal) {
+
+        modal.style.display =
+            "none";
+
+    }
 
 
-    document.getElementById("totalCourses").textContent =
-        courses.size;
+    selectedProfileStudent =
+        null;
+
+}
 
 
-    // Average grade
-    if (students.length === 0) {
+// ==========================================
+// EDIT FROM PROFILE
+// ==========================================
 
-        document.getElementById("averageGrade").textContent =
-            "-";
+function editFromProfile() {
+
+    if (!selectedProfileStudent) {
 
         return;
 
     }
 
 
-    const gradePoints = {
+    const id =
+        selectedProfileStudent._id;
 
-        "A+": 4,
-        "A": 3.7,
-        "B+": 3.3,
-        "B": 3,
-        "C": 2
+
+    closeProfileModal();
+
+
+    editStudent(id);
+
+}
+
+
+// ==========================================
+// DELETE FROM PROFILE
+// ==========================================
+
+async function deleteFromProfile() {
+
+    if (!selectedProfileStudent) {
+
+        return;
+
+    }
+
+
+    const id =
+        selectedProfileStudent._id;
+
+
+    await deleteStudent(id);
+
+}
+
+
+// ==========================================
+// DASHBOARD
+// ==========================================
+
+function updateDashboard() {
+
+    const totalStudents =
+        document.getElementById(
+            "totalStudents"
+        );
+
+
+    const activeStudents =
+        document.getElementById(
+            "activeStudents"
+        );
+
+
+    const totalCourses =
+        document.getElementById(
+            "totalCourses"
+        );
+
+
+    const averageGrade =
+        document.getElementById(
+            "averageGrade"
+        );
+
+
+    const total =
+        allStudents.length;
+
+
+    const courses =
+        new Set(
+
+            allStudents.map(
+                student =>
+                    student.course
+            )
+
+        );
+
+
+    if (totalStudents) {
+
+        totalStudents.textContent =
+            total;
+
+    }
+
+
+    if (activeStudents) {
+
+        activeStudents.textContent =
+            total;
+
+    }
+
+
+    if (totalCourses) {
+
+        totalCourses.textContent =
+            courses.size;
+
+    }
+
+
+    if (averageGrade) {
+
+        if (total === 0) {
+
+            averageGrade.textContent =
+                "-";
+
+        } else {
+
+            let totalGrade = 0;
+
+
+            allStudents.forEach(
+                function (student) {
+
+                    totalGrade +=
+                        getGradeValue(
+                            student.grade
+                        );
+
+                }
+            );
+
+
+            averageGrade.textContent =
+                (
+                    totalGrade /
+                    total
+                ).toFixed(1);
+
+        }
+
+    }
+
+}
+
+
+// ==========================================
+// REPORTS
+// ==========================================
+
+function updateReports() {
+
+    updateReportSummary();
+
+    updateCourseReport();
+
+    updateGradeReport();
+
+    updateCharts();
+
+}
+
+
+// ==========================================
+// REPORT SUMMARY
+// ==========================================
+
+function updateReportSummary() {
+
+    const totalStudents =
+        document.getElementById(
+            "reportTotalStudents"
+        );
+
+
+    const totalCourses =
+        document.getElementById(
+            "reportTotalCourses"
+        );
+
+
+    const averageGrade =
+        document.getElementById(
+            "reportAverageGrade"
+        );
+
+
+    const total =
+        allStudents.length;
+
+
+    const courses =
+        new Set(
+
+            allStudents.map(
+                student =>
+                    student.course
+            )
+
+        );
+
+
+    if (totalStudents) {
+
+        totalStudents.textContent =
+            total;
+
+    }
+
+
+    if (totalCourses) {
+
+        totalCourses.textContent =
+            courses.size;
+
+    }
+
+
+    if (averageGrade) {
+
+        if (total === 0) {
+
+            averageGrade.textContent =
+                "-";
+
+        } else {
+
+            let sum = 0;
+
+
+            allStudents.forEach(
+                function (student) {
+
+                    sum +=
+                        getGradeValue(
+                            student.grade
+                        );
+
+                }
+            );
+
+
+            averageGrade.textContent =
+                (
+                    sum / total
+                ).toFixed(2);
+
+        }
+
+    }
+
+}
+
+
+// ==========================================
+// COURSE REPORT
+// ==========================================
+
+function updateCourseReport() {
+
+    const body =
+        document.getElementById(
+            "courseReportBody"
+        );
+
+
+    if (!body) return;
+
+
+    body.innerHTML =
+        "";
+
+
+    const courseCounts = {};
+
+
+    allStudents.forEach(
+        function (student) {
+
+            const course =
+                student.course ||
+                "Unknown";
+
+
+            if (
+                !courseCounts[
+                    course
+                ]
+            ) {
+
+                courseCounts[
+                    course
+                ] = 0;
+
+            }
+
+
+            courseCounts[
+                course
+            ]++;
+
+        }
+    );
+
+
+    Object.entries(
+        courseCounts
+    )
+
+        .sort(
+            (a, b) =>
+                b[1] - a[1]
+        )
+
+        .forEach(
+            function (
+                [
+                    course,
+                    count
+                ]
+            ) {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${escapeHtml(
+                            course
+                        )}
+                    </td>
+
+                    <td>
+                        ${count}
+                    </td>
+
+                `;
+
+
+                body.appendChild(
+                    row
+                );
+
+            }
+        );
+
+}
+
+
+// ==========================================
+// GRADE REPORT
+// ==========================================
+
+function updateGradeReport() {
+
+    const body =
+        document.getElementById(
+            "gradeReportBody"
+        );
+
+
+    if (!body) return;
+
+
+    body.innerHTML =
+        "";
+
+
+    const gradeCounts = {
+
+        "A+": 0,
+
+        "A": 0,
+
+        "B+": 0,
+
+        "B": 0,
+
+        "C": 0
 
     };
 
 
-    let totalPoints = 0;
+    allStudents.forEach(
+        function (student) {
+
+            if (
+                gradeCounts[
+                    student.grade
+                ] !== undefined
+            ) {
+
+                gradeCounts[
+                    student.grade
+                ]++;
+
+            }
+
+        }
+    );
 
 
-    students.forEach(function (student) {
+    Object.entries(
+        gradeCounts
+    ).forEach(
+        function (
+            [
+                grade,
+                count
+            ]
+        ) {
 
-        totalPoints +=
-            gradePoints[student.grade] || 0;
-
-    });
-
-
-    const average =
-        totalPoints / students.length;
-
-
-    let averageGrade;
-
-
-    if (average >= 3.85) {
-
-        averageGrade = "A+";
-
-    } else if (average >= 3.5) {
-
-        averageGrade = "A";
-
-    } else if (average >= 3.15) {
-
-        averageGrade = "B+";
-
-    } else if (average >= 2.5) {
-
-        averageGrade = "B";
-
-    } else {
-
-        averageGrade = "C";
-
-    }
+            const row =
+                document.createElement(
+                    "tr"
+                );
 
 
-    document.getElementById("averageGrade").textContent =
-        averageGrade;
+            row.innerHTML = `
+
+                <td>
+                    ${grade}
+                </td>
+
+                <td>
+                    ${count}
+                </td>
+
+            `;
+
+
+            body.appendChild(
+                row
+            );
+
+        }
+    );
 
 }
 
 
 // ==========================================
-// 8. START APPLICATION
+// CHARTS
 // ==========================================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+function updateCharts() {
 
-        console.log(
-            "StudentHub JavaScript loaded"
+    if (
+        typeof Chart ===
+        "undefined"
+    ) {
+
+        console.warn(
+            "Chart.js not loaded"
+        );
+
+        return;
+
+    }
+
+
+    updateCourseChart();
+
+    updateGradeChart();
+
+}
+
+
+// ==========================================
+// COURSE CHART
+// ==========================================
+
+function updateCourseChart() {
+
+    const canvas =
+        document.getElementById(
+            "courseChart"
         );
 
 
-        // Add Student form
-        const studentForm =
-            document.getElementById(
-                "studentForm"
+    if (!canvas) return;
+
+
+    const counts = {};
+
+
+    allStudents.forEach(
+        function (student) {
+
+            const course =
+                student.course ||
+                "Unknown";
+
+
+            counts[course] =
+                (
+                    counts[course] ||
+                    0
+                ) + 1;
+
+        }
+    );
+
+
+    if (courseChart) {
+
+        courseChart.destroy();
+
+    }
+
+
+    courseChart =
+        new Chart(
+            canvas,
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels:
+                        Object.keys(
+                            counts
+                        ),
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Students",
+
+                            data:
+                                Object.values(
+                                    counts
+                                )
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false
+
+                }
+
+            }
+        );
+
+}
+
+
+// ==========================================
+// GRADE CHART
+// ==========================================
+
+function updateGradeChart() {
+
+    const canvas =
+        document.getElementById(
+            "gradeChart"
+        );
+
+
+    if (!canvas) return;
+
+
+    const gradeCounts = {
+
+        "A+": 0,
+
+        "A": 0,
+
+        "B+": 0,
+
+        "B": 0,
+
+        "C": 0
+
+    };
+
+
+    allStudents.forEach(
+        function (student) {
+
+            if (
+                gradeCounts[
+                    student.grade
+                ] !== undefined
+            ) {
+
+                gradeCounts[
+                    student.grade
+                ]++;
+
+            }
+
+        }
+    );
+
+
+    if (gradeChart) {
+
+        gradeChart.destroy();
+
+    }
+
+
+    gradeChart =
+        new Chart(
+            canvas,
+            {
+
+                type: "doughnut",
+
+                data: {
+
+                    labels:
+                        Object.keys(
+                            gradeCounts
+                        ),
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "Grades",
+
+                            data:
+                                Object.values(
+                                    gradeCounts
+                                )
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false
+
+                }
+
+            }
+        );
+
+}
+
+
+// ==========================================
+// EXPORT REPORT
+// ==========================================
+
+function exportReport() {
+
+    if (
+        allStudents.length ===
+        0
+    ) {
+
+        showToast(
+            "No students available to export.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const headers = [
+
+        "Name",
+
+        "Student ID",
+
+        "Course",
+
+        "Grade",
+
+        "Added On"
+
+    ];
+
+
+    const rows =
+        allStudents.map(
+            function (student) {
+
+                return [
+
+                    student.name,
+
+                    student.studentId,
+
+                    student.course,
+
+                    student.grade,
+
+                    formatDate(
+                        student.createdAt
+                    )
+
+                ];
+
+            }
+        );
+
+
+    const csvRows = [];
+
+
+    csvRows.push(
+        headers.join(",")
+    );
+
+
+    rows.forEach(
+        function (row) {
+
+            csvRows.push(
+
+                row
+                    .map(
+                        function (value) {
+
+                            return `"${String(
+                                value ?? ""
+                            )
+                                .replace(
+                                    /"/g,
+                                    '""'
+                                )}"`;
+
+                        }
+                    )
+                    .join(",")
+
+            );
+
+        }
+    );
+
+
+    const csv =
+        csvRows.join(
+            "\n"
+        );
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+
+                type:
+                    "text/csv;charset=utf-8;"
+
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        "studenthub-report.csv";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+
+    showToast(
+        "Report exported successfully!",
+        "success"
+    );
+
+}
+
+
+// ==========================================
+// NAVIGATION
+// ==========================================
+
+function setupNavigation() {
+
+    const navLinks =
+        document.querySelectorAll(
+            ".nav-link"
+        );
+
+
+    navLinks.forEach(
+        function (link) {
+
+            link.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+
+                    const section =
+                        this.dataset.section;
+
+
+                    if (section) {
+
+                        showSection(
+                            section
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// SHOW SECTION
+// ==========================================
+
+function showSection(
+    sectionName
+) {
+
+    const sections =
+        document.querySelectorAll(
+            ".section"
+        );
+
+
+    sections.forEach(
+        function (section) {
+
+            section.style.display =
+                "none";
+
+        }
+    );
+
+
+    const target =
+        document.getElementById(
+            sectionName
+        );
+
+
+    if (target) {
+
+        target.style.display =
+            "block";
+
+    }
+
+
+    const navLinks =
+        document.querySelectorAll(
+            ".nav-link"
+        );
+
+
+    navLinks.forEach(
+        function (link) {
+
+            link.classList.remove(
+                "active"
             );
 
 
-        if (studentForm) {
+            if (
+                link.dataset.section ===
+                sectionName
+            ) {
 
-            studentForm.addEventListener(
-                "submit",
-                addStudent
+                link.classList.add(
+                    "active"
+                );
+
+            }
+
+        }
+    );
+
+
+    if (
+        sectionName ===
+        "reports"
+    ) {
+
+        updateReports();
+
+    }
+
+}
+
+
+// ==========================================
+// ADD STUDENT SETUP
+// ==========================================
+
+function setupAddStudent() {
+
+    const form =
+        document.getElementById(
+            "studentForm"
+        );
+
+
+    if (form) {
+
+        form.addEventListener(
+            "submit",
+            addStudent
+        );
+
+    }
+
+
+    const addButton =
+        document.getElementById(
+            "addStudentBtn"
+        );
+
+
+    if (addButton) {
+
+        addButton.addEventListener(
+            "click",
+            function () {
+
+                showSection(
+                    "add-student"
+                );
+
+            }
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// FILTER SETUP
+// ==========================================
+
+function setupFilters() {
+
+    const searchInput =
+        document.getElementById(
+            "searchInput"
+        );
+
+
+    const courseFilter =
+        document.getElementById(
+            "courseFilter"
+        );
+
+
+    const gradeFilter =
+        document.getElementById(
+            "gradeFilter"
+        );
+
+
+    const sortSelect =
+        document.getElementById(
+            "sortSelect"
+        );
+
+
+    const clearButton =
+        document.getElementById(
+            "clearFiltersBtn"
+        );
+
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            "input",
+            applyFilters
+        );
+
+    }
+
+
+    if (courseFilter) {
+
+        courseFilter.addEventListener(
+            "change",
+            applyFilters
+        );
+
+    }
+
+
+    if (gradeFilter) {
+
+        gradeFilter.addEventListener(
+            "change",
+            applyFilters
+        );
+
+    }
+
+
+    if (sortSelect) {
+
+        sortSelect.addEventListener(
+            "change",
+            applyFilters
+        );
+
+    }
+
+
+    if (clearButton) {
+
+        clearButton.addEventListener(
+            "click",
+            clearFilters
+        );
+
+    }
+
+
+    const pageSizeSelect =
+        document.getElementById(
+            "pageSizeSelect"
+        );
+
+
+    if (pageSizeSelect) {
+
+        pageSizeSelect.addEventListener(
+            "change",
+            function () {
+
+                pageSize =
+                    Number(
+                        this.value
+                    ) || 5;
+
+
+                currentPage = 1;
+
+
+                renderStudents();
+
+                renderPagination();
+
+            }
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// EDIT MODAL SETUP
+// ==========================================
+
+function setupEditModal() {
+
+    const form =
+        document.getElementById(
+            "editStudentForm"
+        );
+
+
+    if (form) {
+
+        form.addEventListener(
+            "submit",
+            updateStudent
+        );
+
+    }
+
+
+    const closeButton =
+        document.getElementById(
+            "closeEditModal"
+        );
+
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            "click",
+            closeEditModal
+        );
+
+    }
+
+
+    const modal =
+        document.getElementById(
+            "editModal"
+        );
+
+
+    if (modal) {
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target ===
+                    modal
+                ) {
+
+                    closeEditModal();
+
+                }
+
+            }
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// CLOSE EDIT MODAL
+// ==========================================
+
+function closeEditModal() {
+
+    const modal =
+        document.getElementById(
+            "editModal"
+        );
+
+
+    if (modal) {
+
+        modal.style.display =
+            "none";
+
+    }
+
+}
+
+
+// ==========================================
+// PROFILE MODAL SETUP
+// ==========================================
+
+function setupProfileModal() {
+
+    const closeButton =
+        document.getElementById(
+            "closeProfileModal"
+        );
+
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            "click",
+            closeProfileModal
+        );
+
+    }
+
+
+    const modal =
+        document.getElementById(
+            "profileModal"
+        );
+
+
+    if (modal) {
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target ===
+                    modal
+                ) {
+
+                    closeProfileModal();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    const editButton =
+        document.getElementById(
+            "profileEditBtn"
+        );
+
+
+    if (editButton) {
+
+        editButton.addEventListener(
+            "click",
+            editFromProfile
+        );
+
+    }
+
+
+    const deleteButton =
+        document.getElementById(
+            "profileDeleteBtn"
+        );
+
+
+    if (deleteButton) {
+
+        deleteButton.addEventListener(
+            "click",
+            deleteFromProfile
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// THEME TOGGLE
+// ==========================================
+
+function setupThemeToggle() {
+
+    const themeToggle =
+        document.getElementById(
+            "themeToggle"
+        );
+
+
+    if (!themeToggle) return;
+
+
+    const savedTheme =
+        localStorage.getItem(
+            "studenthub-theme"
+        );
+
+
+    if (
+        savedTheme ===
+        "dark"
+    ) {
+
+        document.body.classList.add(
+            "dark-mode"
+        );
+
+    }
+
+
+    themeToggle.addEventListener(
+        "click",
+        function () {
+
+            document.body.classList.toggle(
+                "dark-mode"
             );
 
-        } else {
 
-            console.error(
-                "studentForm not found"
+            const isDark =
+                document.body.classList.contains(
+                    "dark-mode"
+                );
+
+
+            localStorage.setItem(
+
+                "studenthub-theme",
+
+                isDark
+                    ? "dark"
+                    : "light"
+
             );
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// EXPORT SETUP
+// ==========================================
+
+function setupExport() {
+
+    const exportButton =
+        document.getElementById(
+            "exportReportBtn"
+        );
+
+
+    if (exportButton) {
+
+        exportButton.addEventListener(
+            "click",
+            exportReport
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// LOGOUT
+// ==========================================
+
+function setupLogout() {
+
+    const logoutButton =
+        document.getElementById(
+            "logoutBtn"
+        );
+
+
+    if (!logoutButton) {
+
+        return;
+
+    }
+
+
+    logoutButton.addEventListener(
+        "click",
+        function () {
+
+            sessionStorage.removeItem(
+                "studenthubLoggedIn"
+            );
+
+
+            sessionStorage.removeItem(
+                "studenthubToken"
+            );
+
+
+            sessionStorage.removeItem(
+                "studenthubUsername"
+            );
+
+
+            window.location.href =
+                "login.html";
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// ESCAPE HTML
+// ==========================================
+
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+// ==========================================
+// ESC KEY
+// ==========================================
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (
+            event.key !==
+            "Escape"
+        ) {
+
+            return;
 
         }
 
 
-        // Search
-        const searchInput =
-            document.getElementById(
-                "searchInput"
-            );
+        closeEditModal();
 
-
-        if (searchInput) {
-
-            searchInput.addEventListener(
-                "input",
-                searchStudents
-            );
-
-        }
-
-
-        // Edit/Delete buttons
-        setupTableButtons();
-
-
-        // Load students
-        loadStudents();
+        closeProfileModal();
 
     }
 );
