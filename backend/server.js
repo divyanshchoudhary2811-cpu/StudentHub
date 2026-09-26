@@ -30,7 +30,7 @@ const Admin = require("./Models/Admin");
 
 const app = express();
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 
 // ==========================================
@@ -1022,35 +1022,13 @@ app.use(
 // ==========================================
 
 app.listen(
-
     PORT,
-
+    "0.0.0.0",
     function () {
 
         console.log(
-            "=========================================="
-        );
-
-        console.log(
-            "       STUDENT HUB BACKEND SERVER"
-        );
-
-        console.log(
-            "=========================================="
-        );
-
-        console.log(
-            `Server is running on http://localhost:${PORT}`
-        );
-
-        console.log(
-            "Waiting for requests..."
-        );
-
-        console.log(
-            "=========================================="
+            `Server is running on port ${PORT}`
         );
 
     }
-
 );
