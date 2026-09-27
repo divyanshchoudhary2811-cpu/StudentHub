@@ -3,8 +3,7 @@
 // ==========================================
 
 const API_URL =
-    "http://localhost:5000/api/students";
-
+    "https://studenthub-api-2811.onrender.com/api/students";
 
 // ==========================================
 // GLOBAL VARIABLES
